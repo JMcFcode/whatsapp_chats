@@ -1,4 +1,4 @@
-# WhatsApp Chat Reader
+# WhatsApp Chat Analysis
 This is a class designed to track statistics of different chats on WhatsApp.
 
 ## Installation:
