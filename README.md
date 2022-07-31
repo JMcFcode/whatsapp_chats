@@ -33,7 +33,11 @@ WhatsApp file must be downloaded without images/docs in a .txt format.
 - Looking at Time Series of reply time and number of words sent over a rolling average period.
 
 ### Future plans:
+Add NLP Sentiment and Emoji Analysis.
+
 Add support for group-chats.
+
+Add wordcloud
 
 Add Summary of chat the includes useful statistics.
 

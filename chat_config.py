@@ -1,7 +1,7 @@
 """
 Config File
 """
-filename: str = 'Chat_Files//darren_chat.txt'
+filename: str = 'Chat_Files//ines_chat.txt'
 
 month_map: dict = {1: 'Jan',
                    2: 'Feb',
