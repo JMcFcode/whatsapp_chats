@@ -71,20 +71,6 @@ class ChatData:
         data_df = data_df.iloc[1:, :].reset_index(drop=True)
         return data_df
 
-    # @staticmethod
-    # def prep_month_hist(df: pd.DataFrame) -> pd.DataFrame:
-    #     """
-    #     Create a histogram of the times messages are sent.
-    #     """
-    #     month_list = df['Date'].dt.month.to_list()
-    #     month_str_list = [chat_config.month_map[i] for i in month_list]
-    #     count = Counter(month_str_list)
-    #     plot_df = pd.DataFrame.from_dict(count, orient='index').reset_index()
-    #     plot_df.columns = ['Month', 'Count']
-    #     plot_df['m'] = pd.Categorical(plot_df['Month'], categories=chat_config.month_map.values())
-    #     plot_df = plot_df.sort_values('m')
-    #     return plot_df
-
     @staticmethod
     def categorical_sort(list_cat: list, mapping: dict, label: str) -> pd.DataFrame:
         """
@@ -113,19 +99,6 @@ class ChatData:
         ax[ax_val].set_xticklabels(labels)
         ax[ax_val].set_xlim(0, 24)
         ax[ax_val].hist(hour_list, bins=24 * 4, label=label, alpha=0.5)
-
-    # def time_hist_person(self, df: pd.DataFrame):
-    #     """
-    #     Shows who sent messages when.
-    #     """
-    #     for name in pd.unique(df['Sender']):
-    #         mini_df = df[df['Sender'] == name]
-    #         self.time_hist(df=mini_df, label=name)
-    #
-    #     plt.xlabel('Hour')
-    #     plt.ylabel('Number of Messages')
-    #     plt.legend(loc='best')
-    #     plt.show()
 
     def plot_hist(self, df: pd.DataFrame):
         """
