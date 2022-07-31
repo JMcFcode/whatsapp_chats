@@ -5,11 +5,16 @@ This is a class designed to track statistics of different chats on WhatsApp.
 Following imports required:
 ```python
 import pandas as pd
-from datetime import datetime
-import matplotlib.pyplot as plt
+import numpy as np
 import re
+import time
+import os
+
+import matplotlib.pyplot as plt
 import seaborn as sns
+from datetime import datetime, timedelta
 from collections import Counter
+from copy import copy
 ```
 All are standard packages installed with anaconda.
 
