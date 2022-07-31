@@ -23,7 +23,7 @@ Run the `ChatData.py` file to generate data summary printout and summary plots.
 
 Configuration file `chat_config.py` contains settings such as filename etc.
 
-Specify full path or navigate to working directory where the file is located.
+Specify relative path to file.
 WhatsApp file must be downloaded without images/docs in a .txt format.
 
 ### Currently Supports:
