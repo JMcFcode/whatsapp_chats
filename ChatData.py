@@ -361,6 +361,6 @@ if __name__ == '__main__':
     chat_class.run()
     output = chat_class.data_df
 
-    # chat_class.plot_hist(df=output)
-    # chat_class.plot_time_series()
+    chat_class.plot_hist(df=output)
+    chat_class.plot_time_series()
     chat_class.draw_pie()
