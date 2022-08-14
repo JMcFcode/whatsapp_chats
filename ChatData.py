@@ -74,7 +74,7 @@ class ChatData:
         raw_txt['Msg'] = [line[23:] for line in raw_txt[0]]
         raw_txt['Sender'] = [line[0: line.index(':')] if ':' in line else 'SYSTEM'
                              for line in raw_txt['Msg']]
-        raw_txt['Sender'] = [string.strip() for string in raw_txt['Sender']]
+        raw_txt['Sender'] = [str_val.strip() for str_val in raw_txt['Sender']]
         raw_txt['Message'] = [line[line.index(':') + 2:] if ':' in line else line for line in raw_txt['Msg']]
 
         data_df = raw_txt[['Date', 'Sender', 'Message']]
