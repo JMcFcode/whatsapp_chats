@@ -295,11 +295,12 @@ class ChatData:
         """
         Summary of all the whole chat.
         """
+        date_range = pd.date_range(start=data_df['Date'].values[0], end=data_df['Date'].values[-1]).date
         list_active = [1 if date in data_df['Date'].dt.date.values else 0 for date in
-                       pd.date_range(start=data_df['Date'].values[0], end=data_df['Date'].values[-1]).date]
+                       date_range]
 
         days_active = sum(list_active)
-        days_inactive = len(data_df) - days_active
+        days_inactive = len(date_range) - days_active
 
         string_data = data_df['Message'].str.cat(sep=' ')
         num_words = sum([i.strip(string.punctuation).isalpha() for i in string_data.split()])
@@ -311,6 +312,8 @@ class ChatData:
                     'Days Active': days_active,
                     'Days Inactive': days_inactive}
         dict_out['Word_per_message'] = round(dict_out['Word Count'] / dict_out['Number of Messages'], 1)
+        dict_out['Days Active (%)'] = round(dict_out['Days Active'] /
+                                            (dict_out['Days Active'] + dict_out['Days Inactive']) * 100, 1)
 
         if print_logs:
             print('\n')
