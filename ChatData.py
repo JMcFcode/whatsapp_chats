@@ -11,8 +11,10 @@ import re
 import time
 import os
 import string
+import warnings
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 import seaborn as sns
 from datetime import datetime, timedelta
 from collections import Counter
@@ -22,6 +24,7 @@ from functools import reduce
 import chat_config
 
 sns.set()
+warnings.filterwarnings('ignore')
 
 
 class ChatData:
@@ -117,37 +120,42 @@ class ChatData:
         for name in self.names:
             mini_df = df[df['Sender'] == name]
             self.time_hist(df=mini_df, ax_val=0, ax=ax, label=name)
+
         ax[0].set_xlabel('Hour')
         ax[0].set_ylabel('Number of Messages')
-        ax[0].legend(loc='best')
 
-        month_df_list = []
-        for name in self.names:
-            df_person = df[df['Sender'] == name]
-            list_month = df_person['Date'].dt.month.to_list()
-            month_df = self.categorical_sort(list_cat=list_month,
-                                             mapping=chat_config.month_map, label='Month')
-            month_df.rename(columns={'Count': name}, inplace=True)
-            month_df.drop(columns=['m'], inplace=True)
-            month_df_list.append(month_df)
-        all_months_df = reduce(lambda left, right: pd.merge(left, right, on=['Month'], how='outer'), month_df_list)
-        all_months_df.plot.bar(x='Month', stacked=True, ax=ax[1])
-        ax[1].set_xlabel('Month')
+        def stack_bar(df_inner: pd.DataFrame, mapping: dict, label: str, axes):
+            df_list = []
+            for name_val in self.names:
+                df_minor = df_inner[df_inner['Sender'] == name_val]
+                if label == 'Day':
+                    list_cat = df_minor['Date'].apply(lambda x: x.strftime('%A'))
+                elif label == 'Month':
+                    list_cat = df_minor['Date'].dt.month.to_list()
+                else:
+                    raise Exception('Incorrect Label Specified in stack_bar')
+                cat_df = self.categorical_sort(list_cat=list_cat, mapping=mapping, label=label)
+                cat_df.rename(columns={'Count': name_val}, inplace=True)
+                cat_df.drop(columns=['m'], inplace=True)
+                df_list.append(cat_df)
+            all_df = reduce(lambda left, right: pd.merge(left, right, on=label, how='outer'), df_list)
+            all_df.plot.bar(x=label, stacked=True, ax=axes)
+
+        stack_bar(df_inner=df, mapping=chat_config.month_map, label='Month', axes=ax[1])
         ax[1].set_ylabel('Number of Messages')
+        ax[1].set_xlabel('Month')
 
-        day_df_list = []
-        for name in self.names:
-            df_person = df[df['Sender'] == name]
-            list_day = df_person['Date'].apply(lambda x: x.strftime('%A'))
-            day_df = self.categorical_sort(list_cat=list_day,
-                                           mapping=chat_config.day_map, label='Day')
-            day_df.rename(columns={'Count': name}, inplace=True)
-            day_df.drop(columns=['m'], inplace=True)
-            day_df_list.append(day_df)
-        all_days_df = reduce(lambda left, right: pd.merge(left, right, on=['Day'], how='outer'), day_df_list)
-        all_days_df.plot.bar(x='Day', stacked=True, ax=ax[2])
+        stack_bar(df_inner=df, mapping=chat_config.day_map, label='Day', axes=ax[2])
         ax[2].set_xlabel('Day')
         ax[2].set_ylabel('Number of Messages')
+
+        if len(self.names) <= chat_config.max_members_display_legend:
+            ax[0].legend(loc='best')
+            ax[1].legend(loc='best')
+            ax[2].legend(loc='best')
+        else:
+            ax[1].get_legend().remove()
+            ax[2].get_legend().remove()
 
         fig.tight_layout()
         plt.show()
@@ -160,9 +168,9 @@ class ChatData:
         :return: dict.
         """
         t1 = time.perf_counter()
-        res = df.apply(self.reply_single, axis=1, args=(df, ))
+        res = df.apply(self.reply_single, axis=1, args=(df,))
         t2 = time.perf_counter()
-        print(f'Reply time calc took {t2 -t1} seconds')
+        print(f'Reply time calc took {t2 - t1} seconds')
         res_df = pd.DataFrame(res.to_list(), columns=['DateTime', 'Reply_Sender', 'Reply_Time'])
         res_df = self.filter_multiple_messages(res_df=res_df)
         print('\n')
@@ -184,7 +192,7 @@ class ChatData:
                 bool_list.append(True)
         res_df = res_df[bool_list].reset_index(drop=True)
         s2 = time.perf_counter()
-        print(f'Filter multiple messages took {s2 -s1} seconds')
+        print(f'Filter multiple messages took {s2 - s1} seconds')
         return res_df
 
     @staticmethod
@@ -252,7 +260,6 @@ class ChatData:
             ax[0].plot(word_time_df['DateTime'], word_time_df['Word_Count'], label=name)
         ax[0].set_xlabel('Date')
         ax[0].set_ylabel(f'Word Count per {chat_config.mov_avg_period} days')
-        ax[0].legend(loc='best')
 
         reply_df = self.reply_time(df=self.dict_data['All'])
         reply_df = reply_df[reply_df['Reply_Time'] < 60 * 24 * chat_config.reply_time_max]
@@ -266,7 +273,10 @@ class ChatData:
             ax[1].plot(word_time_df['DateTime'], word_time_df['Avg_Reply_Time'], label=name)
         ax[1].set_xlabel('Date')
         ax[1].set_ylabel(f'Average Reply Time (mins)')
-        ax[1].legend(loc='best')
+
+        if len(self.names) <= chat_config.max_members_display_legend:
+            ax[0].legend(loc='best')
+            ax[1].legend(loc='best')
 
         fig.tight_layout()
         plt.show()
@@ -300,7 +310,7 @@ class ChatData:
                               f"{pd.to_datetime(data_df['Date'].values[-1]).date()}",
                     'Days Active': days_active,
                     'Days Inactive': days_inactive}
-        dict_out['Word_per_message'] = dict_out['Word Count'] / dict_out['Number of Messages']
+        dict_out['Word_per_message'] = round(dict_out['Word Count'] / dict_out['Number of Messages'], 1)
 
         if print_logs:
             print('\n')
@@ -316,6 +326,10 @@ class ChatData:
         list_messages = [self.dict_summary[name]['Number of Messages'] for name in self.names]
         ax.pie(list_messages, labels=self.names, startangle=90)
 
+        draw_circle = Circle((0, 0), radius=0.7, fill=True, color="white")
+        ax.add_patch(draw_circle)
+
+        fig.tight_layout()
         plt.show()
 
     def run(self):
@@ -347,6 +361,6 @@ if __name__ == '__main__':
     chat_class.run()
     output = chat_class.data_df
 
-    chat_class.plot_hist(df=output)
-    chat_class.plot_time_series()
+    # chat_class.plot_hist(df=output)
+    # chat_class.plot_time_series()
     chat_class.draw_pie()

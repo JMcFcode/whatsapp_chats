@@ -1,7 +1,7 @@
 """
 Config File
 """
-filename: str = 'Chat_Files//family_chat.txt'
+filename: str = 'Chat_Files//lads_chat.txt'
 
 month_map: dict = {1: 'Jan',
                    2: 'Feb',
@@ -17,6 +17,8 @@ month_map: dict = {1: 'Jan',
                    12: 'Dec'}
 day_map: dict = {day: day for day in
                  ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+
+max_members_display_legend: int = 6     # Max number of participants before legend isn't displayed
 
 mov_avg_period: int = 30    # Period of moving average in days.
 mov_avg_freq: int = 5
