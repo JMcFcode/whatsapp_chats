@@ -33,7 +33,7 @@ class ChatData:
         self.filename = filename
 
     @staticmethod
-    def parse_data(filename: str):
+    def __parse_data(filename: str):
         with open(os.getcwd() + '//' + filename, 'r', encoding='utf8') as f:
             lines = f.readlines()
         new_lines = []
@@ -57,7 +57,7 @@ class ChatData:
         return new_lines
 
     @staticmethod
-    def into_df(txt: list) -> pd.DataFrame():
+    def __into_df(txt: list) -> pd.DataFrame():
         """
         Read in Chat data and parse into a useable format.
         """
@@ -82,7 +82,7 @@ class ChatData:
         return data_df
 
     @staticmethod
-    def categorical_sort(list_cat: list, mapping: dict, label: str) -> pd.DataFrame:
+    def __categorical_sort(list_cat: list, mapping: dict, label: str) -> pd.DataFrame:
         """
         Create a dataframe that summaries the count of data from a df with static values
         :return: out_df
@@ -96,7 +96,7 @@ class ChatData:
         return out_df
 
     @staticmethod
-    def time_hist(df: pd.DataFrame, ax, ax_val: int, label=None):
+    def __time_hist(df: pd.DataFrame, ax, ax_val: int, label=None):
         """
         Create a histogram of the times messages are sent.
         """
@@ -119,7 +119,7 @@ class ChatData:
 
         for name in self.names:
             mini_df = df[df['Sender'] == name]
-            self.time_hist(df=mini_df, ax_val=0, ax=ax, label=name)
+            self.__time_hist(df=mini_df, ax_val=0, ax=ax, label=name)
 
         ax[0].set_xlabel('Hour')
         ax[0].set_ylabel('Number of Messages')
@@ -134,7 +134,7 @@ class ChatData:
                     list_cat = df_minor['Date'].dt.month.to_list()
                 else:
                     raise Exception('Incorrect Label Specified in stack_bar')
-                cat_df = self.categorical_sort(list_cat=list_cat, mapping=mapping, label=label)
+                cat_df = self.__categorical_sort(list_cat=list_cat, mapping=mapping, label=label)
                 cat_df.rename(columns={'Count': name_val}, inplace=True)
                 cat_df.drop(columns=['m'], inplace=True)
                 df_list.append(cat_df)
@@ -160,7 +160,7 @@ class ChatData:
         fig.tight_layout()
         plt.show()
 
-    def reply_time(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __reply_time(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Calculate the average reply time in minutes.
         Works for chats where there are two people.
@@ -168,16 +168,16 @@ class ChatData:
         :return: dict.
         """
         t1 = time.perf_counter()
-        res = df.apply(self.reply_single, axis=1, args=(df,))
+        res = df.apply(self.__reply_single, axis=1, args=(df,))
         t2 = time.perf_counter()
         print(f'Reply time calc took {t2 - t1} seconds')
         res_df = pd.DataFrame(res.to_list(), columns=['DateTime', 'Reply_Sender', 'Reply_Time'])
-        res_df = self.filter_multiple_messages(res_df=res_df)
+        res_df = self.__filter_multiple_messages(res_df=res_df)
         print('\n')
         return res_df
 
     @staticmethod
-    def filter_multiple_messages(res_df: pd.DataFrame) -> pd.DataFrame:
+    def __filter_multiple_messages(res_df: pd.DataFrame) -> pd.DataFrame:
         """
         Filter out times when a series of messages has been sent.
         """
@@ -196,7 +196,7 @@ class ChatData:
         return res_df
 
     @staticmethod
-    def reply_single(row: pd.Series, df: pd.DataFrame) -> tuple:
+    def __reply_single(row: pd.Series, df: pd.DataFrame) -> tuple:
         time_sent = row['Date']
         sender = row['Sender']
         temp_df = df[df['Date'] > time_sent]
@@ -208,7 +208,7 @@ class ChatData:
             return time_sent, reply_sender, delta_time
 
     @staticmethod
-    def calc_data_amount(df: pd.DataFrame) -> int:
+    def __calc_data_amount(df: pd.DataFrame) -> int:
         """
         Calculate the number of words sent in a dataframe
         :param df:
@@ -218,21 +218,21 @@ class ChatData:
         word_count = len(big_str)
         return word_count
 
-    def time_series_size(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __time_series_size(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Calculate how many words sent in a rolling average period.
         """
         res_dict = {}
         for date in self.date_list_mov_avg:
             temp_df = df[(df['Date'] > date) & (df['Date'] < date + timedelta(chat_config.mov_avg_period))]
-            word_count = self.calc_data_amount(df=temp_df)
+            word_count = self.__calc_data_amount(df=temp_df)
             res_dict[date] = word_count
         res_df = pd.DataFrame.from_dict(res_dict, orient='index')
         res_df = res_df.reset_index()
         res_df.columns = ['DateTime', 'Word_Count']
         return res_df
 
-    def time_series_reply(self, reply_df: pd.DataFrame) -> pd.DataFrame:
+    def __time_series_reply(self, reply_df: pd.DataFrame) -> pd.DataFrame:
         """
         Calculate the average reply time in a rolling average period.
         """
@@ -256,20 +256,20 @@ class ChatData:
         fig, ax = plt.subplots(2, 1, figsize=(10, 6))
 
         for name in self.dict_data.keys():
-            word_time_df = self.time_series_size(df=self.dict_data[name])
+            word_time_df = self.__time_series_size(df=self.dict_data[name])
             ax[0].plot(word_time_df['DateTime'], word_time_df['Word_Count'], label=name)
         ax[0].set_xlabel('Date')
         ax[0].set_ylabel(f'Word Count per {chat_config.mov_avg_period} days')
 
-        reply_df = self.reply_time(df=self.dict_data['All'])
+        reply_df = self.__reply_time(df=self.dict_data['All'])
         reply_df = reply_df[reply_df['Reply_Time'] < 60 * 24 * chat_config.reply_time_max]
-        self.print_reply_stats(reply_df=reply_df)
+        self.__print_reply_stats(reply_df=reply_df)
         for name in self.dict_data.keys():
             if name != 'All':
                 reply_temp_df = reply_df[reply_df['Reply_Sender'] == name]
             else:
                 reply_temp_df = copy(reply_df)
-            word_time_df = self.time_series_reply(reply_df=reply_temp_df)
+            word_time_df = self.__time_series_reply(reply_df=reply_temp_df)
             ax[1].plot(word_time_df['DateTime'], word_time_df['Avg_Reply_Time'], label=name)
         ax[1].set_xlabel('Date')
         ax[1].set_ylabel(f'Average Reply Time (mins)')
@@ -282,7 +282,7 @@ class ChatData:
         plt.show()
 
     @staticmethod
-    def print_reply_stats(reply_df: pd.DataFrame):
+    def __print_reply_stats(reply_df: pd.DataFrame):
         for name in pd.unique(reply_df['Reply_Sender']):
             temp_df = reply_df[reply_df['Reply_Sender'] == name]
             mean = np.mean(temp_df['Reply_Time'])
@@ -291,7 +291,7 @@ class ChatData:
                   f' {round(float(temp_std_dev), 1)} minutes \n ')
 
     @staticmethod
-    def summary_all(data_df: pd.DataFrame, print_logs: bool = True) -> dict:
+    def __summary_all(data_df: pd.DataFrame, print_logs: bool = True) -> dict:
         """
         Summary of all the whole chat.
         """
@@ -336,8 +336,8 @@ class ChatData:
         plt.show()
 
     def run(self):
-        txt = self.parse_data(filename=self.filename)
-        data_df = self.into_df(txt=txt)
+        txt = self.__parse_data(filename=self.filename)
+        data_df = self.__into_df(txt=txt)
         if 'SYSTEM' in data_df['Sender'].values:
             self.full_group_df = data_df
             data_df = data_df[data_df['Sender'] != 'SYSTEM']
@@ -348,11 +348,11 @@ class ChatData:
         start_date = data_df['Date'].iloc[0]
         self.date_list_mov_avg = pd.date_range(start_date, datetime.today(), freq=str(chat_config.mov_avg_freq) + 'D')
 
-        self.dict_summary_all = self.summary_all(data_df=data_df)
+        self.dict_summary_all = self.__summary_all(data_df=data_df)
 
         self.dict_data = {'All': data_df}
         self.data_df = data_df
-        self.dict_summary = {name: self.summary_all(data_df=data_df[data_df['Sender'] == name], print_logs=False)
+        self.dict_summary = {name: self.__summary_all(data_df=data_df[data_df['Sender'] == name], print_logs=False)
                              for name in self.names}
 
         for name in self.names:
