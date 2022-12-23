@@ -33,7 +33,7 @@ class ChatData:
         self.filename = filename
 
     @staticmethod
-    def __parse_data(filename: str):
+    def __parse_data(filename: str) -> list:
         with open(os.getcwd() + '//' + filename, 'r', encoding='utf8') as f:
             lines = f.readlines()
         new_lines = []
@@ -57,7 +57,7 @@ class ChatData:
         return new_lines
 
     @staticmethod
-    def __into_df(txt: list) -> pd.DataFrame():
+    def __into_df(txt: list) -> pd.DataFrame:
         """
         Read in Chat data and parse into a useable format.
         """
